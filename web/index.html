@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BestPick – prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f3;--card:#fff;--ink:#14262b;--mute:#5b6f73;--line:#d5dfdc;--acc:#1f5eff;--accink:#fff;--good:#1b7f4b;--bad:#b4472f;--tint:#e6edff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1d;--card:#172529;--ink:#e8f0ee;--mute:#93a8ab;--line:#2a3d41;--acc:#6f95ff;--accink:#0b1220;--good:#5fd391;--bad:#f09a82;--tint:#1d2c52}}
+:root[data-theme="dark"]{--bg:#0f1a1d;--card:#172529;--ink:#e8f0ee;--mute:#93a8ab;--line:#2a3d41;--acc:#6f95ff;--accink:#0b1220;--good:#5fd391;--bad:#f09a82;--tint:#1d2c52}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Schibsted Grotesk",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:2rem;line-height:1.1;font-weight:800;margin:8px 0 6px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 18px}
+.note{font-size:.85rem;color:var(--mute);border:1px dashed var(--line);border-radius:8px;padding:8px 10px;margin:0 0 16px}
+.bar{display:flex;gap:8px}
+input{flex:1;min-width:0;font:inherit;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink)}
+input:focus,button:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+button{font:inherit;cursor:pointer}
+.go{background:var(--acc);color:var(--accink);border:0;border-radius:10px;padding:0 18px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 22px}
+.chip{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:.9rem}
+.top{background:var(--card);border:2px solid var(--acc);border-radius:14px;padding:18px;margin-bottom:14px}
+.tag{display:inline-block;background:var(--acc);color:var(--accink);font-weight:600;font-size:.8rem;border-radius:6px;padding:2px 8px}
+.top h2{margin:8px 0 2px;font-size:1.4rem}
+.meta{color:var(--mute);font-size:.9rem}
+.score{display:flex;align-items:center;gap:10px;margin:12px 0}
+.track{flex:1;height:8px;background:var(--tint);border-radius:9px;overflow:hidden}
+.fill{height:100%;background:var(--acc);border-radius:9px;width:0;transition:width .6s ease}
+.num{font-weight:800;font-size:1.3rem}
+ul{margin:6px 0 0;padding-left:1.1rem}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+@media(max-width:480px){.pc{grid-template-columns:1fr}}
+.pc b.g{color:var(--good)}.pc b.b{color:var(--bad)}
+.tabs{display:flex;gap:6px;margin:14px 0 8px}
+.tab{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 12px}
+.tab[aria-pressed="true"]{background:var(--tint);border-color:var(--acc);font-weight:600}
+.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.row a{color:var(--acc);font-weight:600;text-decoration:none}
+.row small{color:var(--mute);display:block}
+.alt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+.alt h3{margin:0 0 2px;font-size:1.05rem}
+.alt p{margin:6px 0 0;font-size:.95rem}
+.empty{color:var(--mute);padding:14px;border:1px dashed var(--line);border-radius:12px}
+.locrow{margin-top:10px}.hero-img{display:block;width:100%;border-radius:12px;aspect-ratio:4/3;object-fit:cover}img.thumb{border-radius:10px;aspect-ratio:1;object-fit:cover}
+.src{font-size:.8rem;color:var(--mute);margin-top:10px}
+.art{background:var(--tint);border-radius:12px;overflow:hidden}
+.art svg{display:block;width:100%;height:auto}
+.hero{margin:12px 0 4px}
+.thumb{width:76px;float:left;margin-right:12px}
+.alt{overflow:hidden}
+.vid{width:100%;margin:8px 0 0;background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:10px 12px;font-weight:600;text-align:left}
+.pv{margin-top:8px}
+.pv .art svg{animation:sway 3s ease-in-out infinite alternate;transform-origin:50% 90%}
+.pv .prog{height:4px;background:var(--line);border-radius:4px;margin-top:8px;overflow:hidden}
+.pv .prog i{display:block;height:100%;background:var(--acc);width:0;animation:pg 15s linear forwards}
+@keyframes sway{from{transform:rotate(-5deg) scale(.96)}to{transform:rotate(5deg) scale(1.02)}}
+@keyframes pg{to{width:100%}}
+@media(prefers-reduced-motion:reduce){.pv .art svg,.pv .prog i{animation:none}.pv .prog i{width:100%}}
+</style>
+</head>
+<body>
+<main>
+<h1>Find the best one to buy.</h1>
+<p class="sub">Search a product. Get a top pick summarized from reviews, and where to buy it.</p>
+<p class="note">Prototype: all products, reviews and stores below are made-up sample data.</p>
+<div class="bar"><input id="q" type="search" placeholder="e.g. cordless vacuum" aria-label="Search for a product"><button class="go" id="go">Search</button></div>
+<div class="locrow"><button class="chip" id="loc">📍 Use my location</button> <span class="meta" id="ls"></span></div>
+<div class="chips" id="chips"></div>
+<div id="out"></div>
+</main>
+<script src="config.js"></script>
+<script>
+const API=window.BESTPICK_API||"";// set in config.js
+let loc=null;
+function safe(u){return /^https?:\/\//.test(u||"")?u:"#"}
+async function live(q){const u=new URL("/search",API);u.searchParams.set("q",q);if(loc){u.searchParams.set("lat",loc.lat);u.searchParams.set("lng",loc.lng)}
+const r=await fetch(u);if(!r.ok)throw 0;const res=fromLive(await r.json());if(!res.p.length)throw 0;return res}
+function fromLive(d){const by=Object.fromEntries(d.products.map(p=>[p.id,p])),lo=(d.local||[]).map(s=>[s.store,s.detail||(s.distance_mi+" mi"),s.stock,s.maps_url]);
+return{p:d.analysis.ranking.slice().sort((a,b)=>b.score-a.score).map(x=>{const p=by[x.id]||{};return{n:p.name||x.id,pr:p.price??"?",s:x.score,rv:"Confidence: "+d.analysis.confidence,sum:x.summary,pro:x.pros||[],con:x.cons||[],on:(p.buy||[]).map(b=>[b.store,b.price,b.url]),lo,img:p.image,imgFrom:p.image_from,vid:p.video,vcap:p.video_title?p.video_title+" · "+(p.video_channel||"YouTube"):"",srcs:x.sources||[]}})}}
+const D={
+vacuum:{t:"Cordless vacuums",p:[
+{n:"Aerolite V5",pr:249,s:91,rv:"2,140 reviews across 5 sites",sum:"Owners praise strong suction on carpet and a battery that lasts a full-house clean. The most common gripe is a small dustbin.",pro:["Strong carpet pickup","40+ min real battery","Easy filter wash"],con:["Small bin","Loud on max"],on:[["Brightmart",249],["HomeDepotish",259],["Directline",262]],lo:[["Hartwell Appliance","1.8 mi","In stock"],["Value Hardware","3.4 mi","2 left"]]},
+{n:"Swept S2",pr:179,s:84,rv:"1,310 reviews across 4 sites",sum:"Best value. Great on hard floors, weaker on thick rugs. Reviewers like the light weight.",pro:["Light (5 lb)","Good price"],con:["Struggles on rugs","Battery fades after a year"],on:[["Brightmart",179],["Directline",185]],lo:[["Value Hardware","3.4 mi","In stock"]]},
+{n:"Gust Pro Max",pr:399,s:80,rv:"870 reviews across 3 sites",sum:"Powerful and well built, but many buyers felt it was overpriced and heavy for daily use.",pro:["Very powerful","Strong build"],con:["Heavy","High price"],on:[["Directline",399]],lo:[["Hartwell Appliance","1.8 mi","Order in"]]}]},
+shoe:{t:"Running shoes",p:[
+{n:"Stride Tempo 3",pr:130,s:89,rv:"3,020 reviews across 6 sites",sum:"Runners like the cushioning and true-to-size fit for daily miles. A few report the outsole wears faster than expected.",pro:["Comfortable cushioning","True to size","Breathable"],con:["Outsole wear at ~300 mi"],on:[["Brightmart",130],["RunHaus",135],["Directline",140]],lo:[["Pacer Running Store","2.2 mi","Most sizes"],["SportsMile","5.0 mi","In stock"]]},
+{n:"Lunar Flex",pr:110,s:83,rv:"1,760 reviews across 4 sites",sum:"A budget favorite for easy runs. Fit is a bit narrow for wide feet.",pro:["Great price","Lightweight"],con:["Narrow fit","Less support"],on:[["RunHaus",110],["Brightmart",115]],lo:[["SportsMile","5.0 mi","Limited sizes"]]},
+{n:"Ridge Trail X",pr:155,s:79,rv:"920 reviews across 3 sites",sum:"Excellent grip on trails but stiff on pavement, so reviewers recommend it only for off-road.",pro:["Excellent grip","Durable"],con:["Stiff on road"],on:[["Directline",155]],lo:[["Pacer Running Store","2.2 mi","Order in"]]}]},
+fryer:{t:"Air fryers",p:[
+{n:"Crispa 5.5L",pr:99,s:90,rv:"4,500 reviews across 5 sites",sum:"Even cooking and easy cleanup stand out. Some find the preheat beep annoying.",pro:["Even crisping","Dishwasher-safe basket","Quiet"],con:["Loud beep","Basket coating wears"],on:[["Brightmart",99],["HomeDepotish",104],["Directline",109]],lo:[["Hartwell Appliance","1.8 mi","In stock"],["Value Hardware","3.4 mi","In stock"]]},
+{n:"Puff Mini 3L",pr:59,s:82,rv:"2,200 reviews across 4 sites",sum:"Perfect for one or two people. Too small for family meals.",pro:["Compact","Cheap"],con:["Small capacity"],on:[["Brightmart",59],["Directline",64]],lo:[["Value Hardware","3.4 mi","In stock"]]},
+{n:"Dual Zone XL",pr:189,s:85,rv:"1,480 reviews across 3 sites",sum:"Two baskets cook two foods at once, but it takes lots of counter space.",pro:["Two baskets","Large"],con:["Bulky","Pricey"],on:[["Directline",189]],lo:[["Hartwell Appliance","1.8 mi","Order in"]]}]}};
+const K=[["vac","vacuum"],["shoe","shoe"],["run","shoe"],["sneak","shoe"],["fry","fryer"],["air","fryer"]];
+const $=s=>document.querySelector(s),out=$("#out");
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function list(a){const u=el("ul");a.forEach(i=>u.append(el("li",0,i)));return u}
+function rows(a,local){const w=el("div");a.forEach(r=>{const d=el("div","row"),l=el("div");
+l.append(el("span",0,r[0]));l.append(el("small",0,local?r[1]+" · "+r[2]:"Online"));
+const a2=el("a",0,local?"Directions":"$"+r[1]+" · View");const u=safe(local?r[3]:r[2]);a2.href=u;if(u==="#")a2.onclick=e=>e.preventDefault();else{a2.target="_blank";a2.rel="noopener"}d.append(l,a2);w.append(d)});return w}
+const ART={
+vacuum:'<rect x="70" y="10" width="26" height="46" rx="10" fill="var(--acc)"/><rect x="76" y="54" width="14" height="42" fill="var(--mute)"/><rect x="50" y="94" width="76" height="14" rx="7" fill="var(--ink)"/><circle cx="83" cy="30" r="5" fill="var(--accink)"/>',
+shoe:'<path d="M20 80Q22 50 50 48L80 52Q100 70 140 72Q180 74 182 92V98H20Z" fill="var(--acc)"/><rect x="20" y="98" width="162" height="10" rx="5" fill="var(--ink)"/><path d="M62 54l10 12M76 56l10 12M90 60l8 10" stroke="var(--accink)" stroke-width="3" stroke-linecap="round"/>',
+fryer:'<rect x="50" y="24" width="100" height="74" rx="18" fill="var(--acc)"/><rect x="62" y="38" width="76" height="30" rx="8" fill="var(--accink)" opacity=".85"/><circle cx="100" cy="84" r="6" fill="var(--accink)"/><rect x="60" y="98" width="14" height="8" fill="var(--ink)"/><rect x="126" y="98" width="14" height="8" fill="var(--ink)"/>'};
+ART.generic='<rect x="60" y="30" width="80" height="60" rx="10" fill="var(--acc)"/>';
+function photo(src,alt,c,k){const i=el("img",c||"hero-img");i.referrerPolicy="no-referrer";i.src=safe(src);i.alt=alt;i.loading="lazy";i.onerror=()=>i.replaceWith(art(k||"generic",c));return i}
+function art(k,c){const d=el("div","art "+(c||""));d.innerHTML='<svg viewBox="0 0 200 120" role="img" aria-label="Sample product illustration">'+ART[k]+'</svg>';return d}
+function preview(k,vid,cap){const L=vid?"▶ Watch a review video":"▶ Quick preview (0:15)",w=el("div"),b=el("button","vid",L),p=el("div","pv");p.hidden=true;
+b.onclick=()=>{p.hidden=!p.hidden;p.replaceChildren();if(!p.hidden){if(vid&&/^https:\/\/www\.youtube(-nocookie)?\.com\/embed\//.test(vid)){const f=el("iframe");f.src=vid;f.loading="lazy";f.allowFullscreen=true;f.title="Product video";f.referrerPolicy="strict-origin-when-cross-origin";f.style.cssText="width:100%;aspect-ratio:16/9;border:0;border-radius:12px";p.append(f);if(cap)p.append(el("div","src",cap))}
+else{p.append(art(k));const g=el("div","prog");g.append(el("i"));p.append(g,el("div","src","Placeholder animation. The real version would play a short reviewer or demo clip here."))}}b.textContent=p.hidden?L:"■ Close preview"};
+w.append(b,p);return w}
+async function search(q){q=q.toLowerCase();let k=(K.find(x=>q.includes(x[0]))||[])[1],c,note="";out.replaceChildren();
+if(API){out.append(el("div","empty","Researching. This can take up to a minute…"));try{c=await live(q)}catch(e){note="Live results unavailable, showing sample data."}out.replaceChildren()}
+if(!c){if(!k){out.append(el("div","empty","The prototype only has sample data for vacuums, running shoes and air fryers. Try one of those."));return}c=D[k]}
+k=k||"generic";const t=c.p[0];if(note)out.append(el("p","note",note));
+const box=el("div","top");box.append(el("span","tag","Best pick"),el("h2",0,t.n),el("div","meta","$"+t.pr+" · "+t.rv));
+const hero=el("div","hero");hero.append(t.img?photo(t.img,t.n,null,k):art(k),preview(k,t.vid,t.vcap));box.append(hero);
+if(t.img&&t.imgFrom){try{const c=el("div","src","Photo from ");const a=el("a",0,new URL(t.imgFrom).hostname);a.href=safe(t.imgFrom);a.target="_blank";a.rel="noopener";c.append(a);hero.after(c)}catch(e){}}
+const sc=el("div","score"),tr=el("div","track"),f=el("div","fill");tr.append(f);sc.append(el("span","num",t.s),tr,el("span","meta","/100 review score"));box.append(sc,el("p",0,t.sum));
+const pc=el("div","pc"),a=el("div"),b=el("div");a.append(el("b","g","What people like"),list(t.pro));b.append(el("b","b","Common complaints"),list(t.con));pc.append(a,b);box.append(pc);
+const tabs=el("div","tabs"),bo=el("button","tab","Buy online"),bl=el("button","tab","Buy nearby"),res=el("div");
+function show(l){bo.setAttribute("aria-pressed",!l);bl.setAttribute("aria-pressed",l);{const a=l?t.lo:t.on;res.replaceChildren(a&&a.length?rows(a,l):el("div","empty",l?(loc?"No nearby stores found.":"Tap “Use my location” to see nearby stores."):"No online listings."))}}
+bo.onclick=()=>show(false);bl.onclick=()=>show(true);tabs.append(bo,bl);box.append(tabs,res);
+{const sd=el("div","src");if(t.srcs&&t.srcs.length){sd.append("Sources: ");t.srcs.slice(0,4).forEach((x,i)=>{const a=el("a",0,x.title||x.url);a.href=safe(x.url);a.target="_blank";a.rel="noopener";if(i)sd.append(" · ");sd.append(a)})}else sd.textContent="Sample sources: retailer reviews, forums, expert tests. Real version would link each claim to its source.";box.append(sd)}
+out.append(box);show(false);requestAnimationFrame(()=>f.style.width=t.s+"%");
+out.append(el("h3","meta","Other good options"));
+c.p.slice(1).forEach(p=>{const d=el("div","alt");d.append(p.img?photo(p.img,p.n,"thumb",k):art(k,"thumb"),el("h3",0,p.n+" · $"+p.pr),el("div","meta","Score "+p.s+" · "+p.rv),el("p",0,p.sum));out.append(d)})}
+["cordless vacuum","running shoes","air fryer"].forEach(s=>{const b=el("button","chip",s);b.onclick=()=>{$("#q").value=s;search(s)};$("#chips").append(b)});
+$("#loc").onclick=()=>{if(!navigator.geolocation){$("#ls").textContent="Location isn't available here.";return}
+navigator.geolocation.getCurrentPosition(p=>{loc={lat:p.coords.latitude,lng:p.coords.longitude};$("#ls").textContent="Location on";$("#loc").hidden=true},()=>{$("#ls").textContent="Location blocked. Allow it in your browser settings."})};
+$("#go").onclick=()=>search($("#q").value);$("#q").onkeydown=e=>{if(e.key==="Enter")search(e.target.value)};
+</script>
+</body>
+</html>
