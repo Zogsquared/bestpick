@@ -1,2 +1,2 @@
-// "" = built-in sample data. Set to your API URL once it's live, e.g. "https://api.yourdomain.com"
-window.BESTPICK_API = "";
+// Same-origin: the page and /api/search are served by one Worker.
+window.BESTPICK_API = location.origin;

@@ -67,9 +67,8 @@ ul{margin:6px 0 0;padding-left:1.1rem}
 <main>
 <h1>Find the best one to buy.</h1>
 <p class="sub">Search a product. Get a top pick summarized from reviews, and where to buy it.</p>
-<p class="note">Prototype: all products, reviews and stores below are made-up sample data.</p>
+<p class="note">Picks are researched by AI from public reviews. Prices change, so confirm before you buy.</p>
 <div class="bar"><input id="q" type="search" placeholder="e.g. cordless vacuum" aria-label="Search for a product"><button class="go" id="go">Search</button></div>
-<div class="locrow"><button class="chip" id="loc">📍 Use my location</button> <span class="meta" id="ls"></span></div>
 <div class="chips" id="chips"></div>
 <div id="out"></div>
 </main>
@@ -78,10 +77,10 @@ ul{margin:6px 0 0;padding-left:1.1rem}
 const API=window.BESTPICK_API||"";// set in config.js
 let loc=null;
 function safe(u){return /^https?:\/\//.test(u||"")?u:"#"}
-async function live(q){const u=new URL("/search",API);u.searchParams.set("q",q);if(loc){u.searchParams.set("lat",loc.lat);u.searchParams.set("lng",loc.lng)}
+async function live(q){const u=new URL("/api/search",API);u.searchParams.set("q",q);if(loc){u.searchParams.set("lat",loc.lat);u.searchParams.set("lng",loc.lng)}
 const r=await fetch(u);if(!r.ok)throw 0;const res=fromLive(await r.json());if(!res.p.length)throw 0;return res}
 function fromLive(d){const by=Object.fromEntries(d.products.map(p=>[p.id,p])),lo=(d.local||[]).map(s=>[s.store,s.detail||(s.distance_mi+" mi"),s.stock,s.maps_url]);
-return{p:d.analysis.ranking.slice().sort((a,b)=>b.score-a.score).map(x=>{const p=by[x.id]||{};return{n:p.name||x.id,pr:p.price??"?",s:x.score,rv:"Confidence: "+d.analysis.confidence,sum:x.summary,pro:x.pros||[],con:x.cons||[],on:(p.buy||[]).map(b=>[b.store,b.price,b.url]),lo,img:p.image,imgFrom:p.image_from,vid:p.video,vcap:p.video_title?p.video_title+" · "+(p.video_channel||"YouTube"):"",srcs:x.sources||[]}})}}
+return{p:d.analysis.ranking.slice().sort((a,b)=>b.score-a.score).map(x=>{const p=by[x.id]||{};return{n:p.name||x.id,pr:p.price??"?",s:x.score,rv:"Confidence: "+d.analysis.confidence,sum:x.summary,pro:x.pros||[],con:x.cons||[],on:(p.buy||[]).map(b=>[b.store,b.price,b.url]),lo,live:1,img:p.image,imgFrom:p.image_from,vid:p.video,vcap:p.video_title?p.video_title+" · "+(p.video_channel||"YouTube"):"",srcs:x.sources||[]}})}}
 const D={
 vacuum:{t:"Cordless vacuums",p:[
 {n:"Aerolite V5",pr:249,s:91,rv:"2,140 reviews across 5 sites",sum:"Owners praise strong suction on carpet and a battery that lasts a full-house clean. The most common gripe is a small dustbin.",pro:["Strong carpet pickup","40+ min real battery","Easy filter wash"],con:["Small bin","Loud on max"],on:[["Brightmart",249],["HomeDepotish",259],["Directline",262]],lo:[["Hartwell Appliance","1.8 mi","In stock"],["Value Hardware","3.4 mi","2 left"]]},
@@ -101,7 +100,7 @@ function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=nu
 function list(a){const u=el("ul");a.forEach(i=>u.append(el("li",0,i)));return u}
 function rows(a,local){const w=el("div");a.forEach(r=>{const d=el("div","row"),l=el("div");
 l.append(el("span",0,r[0]));l.append(el("small",0,local?r[1]+" · "+r[2]:"Online"));
-const a2=el("a",0,local?"Directions":"$"+r[1]+" · View");const u=safe(local?r[3]:r[2]);a2.href=u;if(u==="#")a2.onclick=e=>e.preventDefault();else{a2.target="_blank";a2.rel="noopener"}d.append(l,a2);w.append(d)});return w}
+const a2=el("a",0,local?"Store info":"$"+r[1]+" · View");const u=safe(local?r[3]:r[2]);a2.href=u;if(u==="#")a2.onclick=e=>e.preventDefault();else{a2.target="_blank";a2.rel="noopener"}d.append(l,a2);w.append(d)});return w}
 const ART={
 vacuum:'<rect x="70" y="10" width="26" height="46" rx="10" fill="var(--acc)"/><rect x="76" y="54" width="14" height="42" fill="var(--mute)"/><rect x="50" y="94" width="76" height="14" rx="7" fill="var(--ink)"/><circle cx="83" cy="30" r="5" fill="var(--accink)"/>',
 shoe:'<path d="M20 80Q22 50 50 48L80 52Q100 70 140 72Q180 74 182 92V98H20Z" fill="var(--acc)"/><rect x="20" y="98" width="162" height="10" rx="5" fill="var(--ink)"/><path d="M62 54l10 12M76 56l10 12M90 60l8 10" stroke="var(--accink)" stroke-width="3" stroke-linecap="round"/>',
@@ -117,21 +116,19 @@ async function search(q){q=q.toLowerCase();let k=(K.find(x=>q.includes(x[0]))||[
 if(API){out.append(el("div","empty","Researching. This can take up to a minute…"));try{c=await live(q)}catch(e){note="Live results unavailable, showing sample data."}out.replaceChildren()}
 if(!c){if(!k){out.append(el("div","empty","The prototype only has sample data for vacuums, running shoes and air fryers. Try one of those."));return}c=D[k]}
 k=k||"generic";const t=c.p[0];if(note)out.append(el("p","note",note));
-const box=el("div","top");box.append(el("span","tag","Best pick"),el("h2",0,t.n),el("div","meta","$"+t.pr+" · "+t.rv));
-const hero=el("div","hero");hero.append(t.img?photo(t.img,t.n,null,k):art(k),preview(k,t.vid,t.vcap));box.append(hero);
+const box=el("div","top");box.append(el("span","tag","Best pick"),el("h2",0,t.n),el("div","meta",(typeof t.pr==="number"?"$"+t.pr:"Price varies")+" · "+t.rv));
+const hero=el("div","hero");hero.append(t.img?photo(t.img,t.n,null,k):art(k),(t.live&&!t.vid?"":preview(k,t.vid,t.vcap)));box.append(hero);
 if(t.img&&t.imgFrom){try{const c=el("div","src","Photo from ");const a=el("a",0,new URL(t.imgFrom).hostname);a.href=safe(t.imgFrom);a.target="_blank";a.rel="noopener";c.append(a);hero.after(c)}catch(e){}}
 const sc=el("div","score"),tr=el("div","track"),f=el("div","fill");tr.append(f);sc.append(el("span","num",t.s),tr,el("span","meta","/100 review score"));box.append(sc,el("p",0,t.sum));
 const pc=el("div","pc"),a=el("div"),b=el("div");a.append(el("b","g","What people like"),list(t.pro));b.append(el("b","b","Common complaints"),list(t.con));pc.append(a,b);box.append(pc);
 const tabs=el("div","tabs"),bo=el("button","tab","Buy online"),bl=el("button","tab","Buy nearby"),res=el("div");
-function show(l){bo.setAttribute("aria-pressed",!l);bl.setAttribute("aria-pressed",l);{const a=l?t.lo:t.on;res.replaceChildren(a&&a.length?rows(a,l):el("div","empty",l?(loc?"No nearby stores found.":"Tap “Use my location” to see nearby stores."):"No online listings."))}}
+function show(l){bo.setAttribute("aria-pressed",!l);bl.setAttribute("aria-pressed",l);{const a=l?t.lo:t.on;res.replaceChildren(a&&a.length?rows(a,l):el("div","empty",l?"No nearby stores found for your area.":"No online listings."))}}
 bo.onclick=()=>show(false);bl.onclick=()=>show(true);tabs.append(bo,bl);box.append(tabs,res);
 {const sd=el("div","src");if(t.srcs&&t.srcs.length){sd.append("Sources: ");t.srcs.slice(0,4).forEach((x,i)=>{const a=el("a",0,x.title||x.url);a.href=safe(x.url);a.target="_blank";a.rel="noopener";if(i)sd.append(" · ");sd.append(a)})}else sd.textContent="Sample sources: retailer reviews, forums, expert tests. Real version would link each claim to its source.";box.append(sd)}
 out.append(box);show(false);requestAnimationFrame(()=>f.style.width=t.s+"%");
 out.append(el("h3","meta","Other good options"));
-c.p.slice(1).forEach(p=>{const d=el("div","alt");d.append(p.img?photo(p.img,p.n,"thumb",k):art(k,"thumb"),el("h3",0,p.n+" · $"+p.pr),el("div","meta","Score "+p.s+" · "+p.rv),el("p",0,p.sum));out.append(d)})}
+c.p.slice(1).forEach(p=>{const d=el("div","alt");d.append(p.img?photo(p.img,p.n,"thumb",k):art(k,"thumb"),el("h3",0,p.n+" · "+(typeof p.pr==="number"?"$"+p.pr:"price varies")),el("div","meta","Score "+p.s+" · "+p.rv),el("p",0,p.sum));out.append(d)})}
 ["cordless vacuum","running shoes","air fryer"].forEach(s=>{const b=el("button","chip",s);b.onclick=()=>{$("#q").value=s;search(s)};$("#chips").append(b)});
-$("#loc").onclick=()=>{if(!navigator.geolocation){$("#ls").textContent="Location isn't available here.";return}
-navigator.geolocation.getCurrentPosition(p=>{loc={lat:p.coords.latitude,lng:p.coords.longitude};$("#ls").textContent="Location on";$("#loc").hidden=true},()=>{$("#ls").textContent="Location blocked. Allow it in your browser settings."})};
 $("#go").onclick=()=>search($("#q").value);$("#q").onkeydown=e=>{if(e.key==="Enter")search(e.target.value)};
 </script>
 </body>

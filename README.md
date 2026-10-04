@@ -1,25 +1,12 @@
 # BestPick
 
-`web/` is the static site (Cloudflare Pages). `api/` is the FastAPI backend (home server + Cloudflare Tunnel).
+One Cloudflare Worker: `web/` is the page, `src/worker.js` is the AI research agent at `/api/search`.
+No servers, Docker or tunnels.
 
-## 1. Push to GitHub
-    git init && git add . && git commit -m "BestPick first version"
-    git branch -M main
-    git remote add origin git@github.com:Zogsquared/bestpick.git
-    git push -u origin main
+## Setup
+1. In Cloudflare: Workers & Pages > bestpick > Settings > Variables and Secrets > add a **Secret** named `ANTHROPIC_API_KEY`.
+2. Push to GitHub. Cloudflare builds and deploys. The `CACHE` KV namespace is created automatically.
+3. In the Anthropic Console, set a monthly spend limit for the key.
 
-## 2. Cloudflare Pages (frontend)
-Workers & Pages > Create > Pages > Import an existing Git repository > pick the repo.
-- Framework preset: None
-- Build command: (leave blank)
-- Build output directory: `web`
-Every push to `main` redeploys; other branches get preview URLs.
-
-## 3. API on the home server
-1. Cloudflare Zero Trust > Networks > Tunnels > create a tunnel, copy its token.
-2. Add a public hostname, e.g. `api.yourdomain.com`, pointing to `http://api:8000`.
-3. `cd api && cp .env.example .env`, fill in `ANTHROPIC_API_KEY`, `GOOGLE_PLACES_API_KEY` and `YOUTUBE_API_KEY`, `TUNNEL_TOKEN`, and `ALLOWED_ORIGINS` (your Pages URL).
-4. `docker compose up -d --build`
-
-## 4. Connect them
-Set `window.BESTPICK_API = "https://api.yourdomain.com"` in `web/config.js`, commit, push.
+## Optional variables (plain text)
+`MODEL` (default claude-sonnet-5-5), `RATE_LIMIT` (new searches per IP per hour, default 10), `MAX_DAILY` (new searches per day, default 100).
